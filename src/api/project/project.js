@@ -14,6 +14,12 @@ export default {
       method: 'post',
       data: project
     })
+  },
+  removeProjectId(id){
+    return request({
+      url: `/projectservice/${id}`,
+      method: 'delete',
+    })
   }
 }
 

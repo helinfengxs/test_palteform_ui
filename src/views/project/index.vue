@@ -6,25 +6,25 @@
     </el-row>
 
 <!--新增项目-->
-    <el-dialog title="新增项目"  :visible.sync="dialogFormVisible" :close-on-click-modal="false">
-      <el-form   :model="projects" :rules="rules"  label-width="80px">
+    <el-dialog title="新增项目"  :visible.sync="dialogFormVisible" :close-on-click-modal="false" @close="celarData" width="600px" >
+      <el-form   :model="projects" :rules="rules" ref="projects"  label-width="80px">
         <el-form-item label="项目名称" :required="true" prop="title">
-          <el-input style="width: 250px"  v-model="projects.title" placeholder="项目名称" autocomplete="off" size="small"></el-input>
+          <el-input style="width: 250px"  v-model="projects.title" placeholder="项目名称" auto-complete="off" size="small" :show-word-limit="true" maxlength="10"></el-input>
         </el-form-item>
-        <el-form-item label="测试类型"   :required="true">
-          <el-select style="width: 250px" v-model="projects.testType" placeholder="请选择活动区域" size="small" >
+        <el-form-item label="测试类型"   :required="true" prop="testType">
+          <el-select style="width: 250px" v-model="projects.testType" placeholder="请选择测试类型" size="small"  :clearable="true">
             <el-option label="UI测试" value="0"></el-option>
             <el-option label="接口测试" value="1"></el-option>
             <el-option label="性能测试" value="2"></el-option>
             <el-option label="app测试" value="3"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="项目描述" :required="true" >
+        <el-form-item label="项目描述"  >
           <el-input
             type="textarea"
-            placeholder="请输入内容"
+            placeholder="请输入项目描述"
             v-model="projects.describtion"
-            maxlength="30"
+            maxlength="50"
             style="width: 250px"
             size="small"
           >
@@ -41,7 +41,7 @@
 
 
 
-
+<!--  条件查询-->
     <el-form :inline="true" :model="formInline" class="demo-form-inline">
       <el-form-item label="项目名称">
         <el-input maxlength="20" v-model="formInline.title" placeholder="项目名称" size="mini" style="width: 120px"></el-input>
@@ -93,7 +93,7 @@
         <el-button type="info" @click="resetData"  size="mini" >清空条件</el-button>
       </el-form-item>
     </el-form>
-    <!-- 表格 -->
+    <!-- 项目列表展示 -->
     <el-table
       :data="items"
       element-loading-text="数据加载中"
@@ -162,6 +162,22 @@
 import project from '@/api/project/project'
 export default {
   data() {
+    var checkTilte = (rule, value, callback)=> {
+        if(!value){
+          return callback(new Error('项目名称未选择'));
+        }
+        if(value.length <=2){
+          return callback(new Error("项目名称长度必须大于3"))
+        }
+        return callback()
+    }
+    var checkTestType = (rule, value, callback) =>{
+      if(!value){
+        return callback(new Error('测试类型未选择'));
+      }else {
+        return callback()
+      }
+    }
     return {
       formLabelWidth: '120px',
       dialogFormVisible: false,
@@ -182,9 +198,11 @@ export default {
       },
       rules:{
         title: [
-          { required: true, message: '请输入项目名称', trigger: 'blur' },
-          { min: 3, max: 20, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+          { validator:checkTilte, trigger: 'blur' },
         ],
+        testType:[
+          { validator:checkTestType, trigger: 'change' },
+        ]
       }
     }
   },
@@ -240,33 +258,91 @@ export default {
     addProject(projects){
       project.addProject(projects)
       .then(respones => {
-        console.log(respones)
-        this.projects={}
+        if(respones.success){
+          this.dialogFormVisible=false
+          this.formInline = {}
+          this.getList()
+          this.$message({
+            type: 'success',
+            message: '添加项目成功'
+          });
+        }else {
+          this.dialogFormVisible=false
+          this.$message({
+            type: 'fialed',
+            message: '添加项目失败'
+          });
+        }
+
       })
       .catch(error => {
         console.log(error)
       })
     },
     commitProjectInfo(){
-      this.$confirm('是否确认添加？', '确认信息', {
-        distinguishCancelAndClose: true,
-        confirmButtonText: '确认',
-        cancelButtonText: '取消'
+      this.$refs.projects.validate((valid) =>{
+        if(valid){
+          this.$confirm('是否确认添加？', '确认信息', {
+            distinguishCancelAndClose: true,
+            confirmButtonText: '确认',
+            cancelButtonText: '取消'
+          })
+            .then(() => {
+              this.addProject(this.projects)
+            })
+            .catch(action => {
+              this.$message({
+                type: 'info',
+                message: action === 'cancel'
+              })
+            });
+        }else {
+          this.$message.error('项目信息填写不完整');
+        }
       })
-        .then(() => {
+    },
+    celarData(){
+      this.projects = {}
+      this.$refs.projects.resetFields();
+    },
+    removeProjectId(id){
+        project.removeProjectId(id)
+      .then(respones =>{
+        if(respones.success){
+          this.getList()
           this.$message({
             type: 'success',
-            message: '添加项目成功'
+            message: '删除成功!'
           });
-        })
-        .catch(action => {
+        }else {
           this.$message({
-            type: 'info',
-            message: action === 'cancel'
-              ? '取消添加并离开页面'
-              : '停留在当前页面'
-          })
+            type: 'warning',
+            message: '删除失败!'
+          });
+        }
+      })
+      .catch(error => {
+        this.$message({
+          type: 'error',
+          message: error
         });
+      })
+    },
+    removeDataById(id){
+      this.$confirm('此操作将永久删除项目, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.removeProjectId(id)
+
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });
+      });
+
     }
 
   }
