@@ -7,6 +7,14 @@ export default {
       method: 'post',
       data: projectQuery
     })
+  },
+  addProject(project){
+    return request({
+      url: `/projectservice/addProject/`,
+      method: 'post',
+      data: project
+    })
   }
 }
+
 
