@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-row :gutter="20">
       <el-col :span="2.5"><el-button  @click="dialogFormVisible = true" type="primary" size="small">新增项目</el-button></el-col>
-      <el-col :span="1"><el-button type="danger" size="small">批量删除</el-button></el-col>
+      <el-col :span="1"><el-button type="danger" size="small" @click="removeSelect">批量删除</el-button></el-col>
     </el-row>
 
 <!--新增项目-->
@@ -12,7 +12,7 @@
           <el-input style="width: 250px"  v-model="projects.title" placeholder="项目名称" auto-complete="off" size="small" :show-word-limit="true" maxlength="10"></el-input>
         </el-form-item>
         <el-form-item label="测试类型"   :required="true" prop="testType">
-          <el-select style="width: 250px" v-model="projects.testType" placeholder="请选择测试类型" size="small"  :clearable="true">
+          <el-select style="width: 250px" v-model="projects.testType" placeholder="请选择测试类型" size="small"  :clearable="true" :disabled="isDisabled">
             <el-option label="UI测试" value="0"></el-option>
             <el-option label="接口测试" value="1"></el-option>
             <el-option label="性能测试" value="2"></el-option>
@@ -34,7 +34,7 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取 消</el-button>
-        <el-button type="primary" @click="commitProjectInfo" >确 定</el-button>
+        <el-button type="primary" @click="commitProjectInfo(projectId)" >确 定</el-button>
       </div>
     </el-dialog>
 
@@ -138,9 +138,8 @@
       <el-table-column prop="describtion" label="描述" />
       <el-table-column label="操作" width="200" align="center">
         <template slot-scope="scope">
-          <router-link :to="'/edu/teacher/edit/'+scope.row.id">
-            <el-button type="primary" size="mini" icon="el-icon-edit">修改</el-button>
-          </router-link>
+            <el-button type="primary" size="mini" icon="el-icon-edit" @click="eidtor(scope.row.id)">修改</el-button>
+
           <el-button type="danger" size="mini" icon="el-icon-delete" @click="removeDataById(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
@@ -164,12 +163,25 @@ export default {
   data() {
     var checkTilte = (rule, value, callback)=> {
         if(!value){
-          return callback(new Error('项目名称未选择'));
+          callback(new Error('项目名称未填入'));
         }
-        if(value.length <=2){
-          return callback(new Error("项目名称长度必须大于3"))
+        else if(value.length <=1){
+          callback(new Error("项目名称长度必须大于2"))
+        }else {
+          project.findProjectByTitle(value)
+          .then(respones =>{
+            if(respones.data.size > 0){
+              callback(new Error("项目名称重复"))
+            }else {
+              callback()
+            }
+          })
+          .catch(error => {
+            callback(new Error("项目名称重复"))
+          })
         }
-        return callback()
+
+
     }
     var checkTestType = (rule, value, callback) =>{
       if(!value){
@@ -179,6 +191,8 @@ export default {
       }
     }
     return {
+      projectId:"",
+      isDisabled : false,
       formLabelWidth: '120px',
       dialogFormVisible: false,
       total:0,
@@ -198,7 +212,7 @@ export default {
       },
       rules:{
         title: [
-          { validator:checkTilte, trigger: 'blur' },
+          { validator:checkTilte ,trigger: 'blur' },
         ],
         testType:[
           { validator:checkTestType, trigger: 'change' },
@@ -255,6 +269,9 @@ export default {
       }
 
     },
+    /**
+     * 添加项目接口
+     */
     addProject(projects){
       project.addProject(projects)
       .then(respones => {
@@ -279,7 +296,10 @@ export default {
         console.log(error)
       })
     },
-    commitProjectInfo(){
+    /**
+     *提交dialog表单
+     */
+    commitProjectInfo(id){
       this.$refs.projects.validate((valid) =>{
         if(valid){
           this.$confirm('是否确认添加？', '确认信息', {
@@ -293,7 +313,7 @@ export default {
             .catch(action => {
               this.$message({
                 type: 'info',
-                message: action === 'cancel'
+                message: "取消添加"
               })
             });
         }else {
@@ -301,10 +321,21 @@ export default {
         }
       })
     },
+    /**
+     *清除dialog框数据
+     */
     celarData(){
       this.projects = {}
+      this.formInline = {}
+      this.getList()
       this.$refs.projects.resetFields();
+      this.isDisabled = false
+      this.projectId =""
     },
+    /**
+     * 单个删除
+     * @param id
+     */
     removeProjectId(id){
         project.removeProjectId(id)
       .then(respones =>{
@@ -343,9 +374,64 @@ export default {
         });
       });
 
-    }
+    },
+    /**
+     * 批量删除
+     */
+    removeSelect(){
+      var ids = [];
+      this.multipleSelection.forEach(selectltem => {
+        ids.push(selectltem.id)
+      })
+      this.$confirm('删除已选中的项目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.delPartProject(ids)
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          });
+        });
+
+      },
+    delPartProject(ids){
+      project.deletePartProject(ids)
+        .then(response =>{
+          this.getList()
+          if(response.success){
+            this.$message({
+              type: 'success',
+              message: '删除成功!'
+            });
+          }else{
+            this.$message({
+              type: 'error',
+              message: '删除失败!'
+            });
+          }
+        })
+        .catch(error => {
+          this.$message({
+            type: 'error',
+            message: error +'删除失败'
+          });
+        })
+    },
+    /**
+     * 修改项目
+     * @param id
+     */
+    eidtor(id){
+      this.dialogFormVisible = true
+      this.isDisabled = true
+      this.projectId = id
+    },
 
   }
+
 }
 
 

@@ -20,6 +20,20 @@ export default {
       url: `/projectservice/${id}`,
       method: 'delete',
     })
+  },
+  findProjectByTitle(title){
+    return request({
+      url: `/projectservice/findProjectByTitle`,
+      method: 'get',
+      params: {"title":title}
+    })
+  },
+  deletePartProject(ids){
+    return request({
+      url: `/projectservice/deletePartProject`,
+      method: 'delete',
+      data:ids
+    })
   }
 }
 
