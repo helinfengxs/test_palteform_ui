@@ -34,6 +34,19 @@ export default {
       method: 'delete',
       data:ids
     })
+  },
+  findProjectById(id){
+    return request({
+      url: `/projectservice/getProject/${id}/`,
+      method: 'get',
+    })
+  },
+  updatePorjectById(project){
+    return request({
+      url: `/projectservice/updateProject/`,
+      method: 'post',
+      data:project
+    })
   }
 }
 

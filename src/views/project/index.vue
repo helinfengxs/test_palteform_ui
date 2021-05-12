@@ -1,16 +1,26 @@
 <template>
   <div class="app-container">
     <el-row :gutter="20">
-      <el-col :span="2.5"><el-button  @click="dialogFormVisible = true" type="primary" size="small">新增项目</el-button></el-col>
+      <el-col :span="2.5"><el-button  @click="openDialog" type="primary" size="small">新增项目</el-button></el-col>
       <el-col :span="1"><el-button type="danger" size="small" @click="removeSelect">批量删除</el-button></el-col>
     </el-row>
 
 <!--新增项目-->
-    <el-dialog title="新增项目"  :visible.sync="dialogFormVisible" :close-on-click-modal="false" @close="celarData" width="600px" >
+    <el-dialog title=""  :visible.sync="dialogFormVisible" :close-on-click-modal="false" @close="celarData" width="600px"  >
+
+
+
+      <div slot="title" class="header-title">
+        <span v-show="projectName" class="title-name">{{projectName}}</span>
+      </div>
+
+
       <el-form   :model="projects" :rules="rules" ref="projects"  label-width="80px">
         <el-form-item label="项目名称" :required="true" prop="title">
-          <el-input style="width: 250px"  v-model="projects.title" placeholder="项目名称" auto-complete="off" size="small" :show-word-limit="true" maxlength="10"></el-input>
+          <el-input style="width: 250px"  v-model="projects.title" placeholder="项目名称" auto-complete="off" size="small" :show-word-limit="true" maxlength="20"></el-input>
         </el-form-item>
+
+
         <el-form-item label="测试类型"   :required="true" prop="testType">
           <el-select style="width: 250px" v-model="projects.testType" placeholder="请选择测试类型" size="small"  :clearable="true" :disabled="isDisabled">
             <el-option label="UI测试" value="0"></el-option>
@@ -121,10 +131,10 @@
 
       <el-table-column label="项目测试类型" width="80">
       <template slot-scope="scop" >
-        <div v-if="scop.row.testType === 0">UI测试</div>
-        <div v-if="scop.row.testType === 1">接口测试</div>
-        <div v-if="scop.row.testType === 2">性能测试</div>
-        <div v-if="scop.row.testType === 3">app测试</div>
+        <div v-if="scop.row.testType === '0'">UI测试</div>
+        <div v-if="scop.row.testType === '1'">接口测试</div>
+        <div v-if="scop.row.testType === '2'">性能测试</div>
+        <div v-if="scop.row.testType === '3'">app测试</div>
 
       </template>
       </el-table-column>
@@ -165,8 +175,8 @@ export default {
         if(!value){
           callback(new Error('项目名称未填入'));
         }
-        else if(value.length <=1){
-          callback(new Error("项目名称长度必须大于2"))
+        else if(value.trim().length <1){
+          callback(new Error("项目名称未填入"))
         }else {
           project.findProjectByTitle(value)
           .then(respones =>{
@@ -191,6 +201,8 @@ export default {
       }
     }
     return {
+      projectName:"",
+      timer:null,
       projectId:"",
       isDisabled : false,
       formLabelWidth: '120px',
@@ -206,8 +218,15 @@ export default {
         end:null,
       },
       projects:{
+        id:null,
         title:null,
         testType: null,
+        describtion:null
+      },
+      eidtorProject:{
+        id:null,
+        title:null,
+        testType: "",
         describtion:null
       },
       rules:{
@@ -269,6 +288,10 @@ export default {
       }
 
     },
+    openDialog(){
+      this.dialogFormVisible = true
+      this.projectName = "添加项目"
+    },
     /**
      * 添加项目接口
      */
@@ -300,26 +323,50 @@ export default {
      *提交dialog表单
      */
     commitProjectInfo(id){
-      this.$refs.projects.validate((valid) =>{
-        if(valid){
-          this.$confirm('是否确认添加？', '确认信息', {
-            distinguishCancelAndClose: true,
-            confirmButtonText: '确认',
-            cancelButtonText: '取消'
-          })
-            .then(() => {
-              this.addProject(this.projects)
+      if(id === ""){
+        this.$refs.projects.validate((valid) =>{
+          if(valid){
+            this.$confirm('是否确认添加？', '确认信息', {
+              distinguishCancelAndClose: true,
+              confirmButtonText: '确认',
+              cancelButtonText: '取消'
             })
-            .catch(action => {
+              .then(() => {
+                this.addProject(this.projects)
+              })
+              .catch(action => {
+                this.$message({
+                  type: 'info',
+                  message: "取消添加"
+                })
+              });
+          }else {
+            this.$message.error('项目信息填写不完整');
+          }
+        })
+      }else {
+        this.$refs.projects.validate((valid) =>{
+          if(valid){
+            this.$confirm('是否确认修改？', '确认修改', {
+              distinguishCancelAndClose: true,
+              confirmButtonText: '确认',
+              cancelButtonText: '取消'
+            })
+            .then(()=>{
+              this.updateProject()
+
+            })
+            .catch(()=>{
               this.$message({
                 type: 'info',
-                message: "取消添加"
+                message: "取消修改"
               })
-            });
-        }else {
-          this.$message.error('项目信息填写不完整');
-        }
-      })
+            })
+          }
+
+        })
+      }
+
     },
     /**
      *清除dialog框数据
@@ -425,10 +472,49 @@ export default {
      * @param id
      */
     eidtor(id){
-      this.dialogFormVisible = true
+      this.projectName = "修改项目"
       this.isDisabled = true
       this.projectId = id
+      this.findProject()
+
+      this.dialogFormVisible = true
+
+
+
     },
+    findProject(){
+      project.findProjectById(this.projectId)
+      .then(response =>{
+        this.projects = response.data.items
+
+      })
+      .catch(error => {
+        console.log(error)
+      })
+    },
+    updateProject(){
+      project.updatePorjectById(this.projects)
+        .then(response =>{
+          if(response.success){
+            this.dialogFormVisible = false
+            this.$message({
+              type: 'success',
+              message: '修改成功!'
+            });
+          }else {
+            this.$message({
+              type: 'error',
+              message: '修改失败!'
+            });
+          }
+        })
+        .catch(error => {
+          this.$message({
+            type: 'error',
+            message: '修改失败'+error
+          });
+        })
+    }
 
   }
 
