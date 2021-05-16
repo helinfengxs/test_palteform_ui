@@ -51,6 +51,27 @@ export const constantRouterMap = [
 
   },
   {
+    path: '/interfaceTest',
+    component: Layout,
+    redirect: '/interfaceTest/manager',
+    name: 'interfaceTest',
+    meta: { title: '接口测试', icon: 'example' },
+    children: [
+      {
+        path: 'manager',
+        name: 'manager',
+        component: () => import('@/views/interfaceTest/manager'),
+        meta: { title: '接口管理', icon: 'table' }
+      },
+      {
+        path: 'case',
+        name: 'case',
+        component: () => import('@/views/interfaceTest/case'),
+        meta: { title: '接口用例', icon: 'tree' }
+      }
+    ]
+  },
+  {
     path: '/example',
     component: Layout,
     redirect: '/example/table',

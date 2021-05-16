@@ -138,7 +138,7 @@
 
       </template>
       </el-table-column>
-      <el-table-column prop="interfaceCount" label="接口总数" width="80"/>
+      <el-table-column  prop="interfaceCount" label="接口总数" width="80"/>
 
       <el-table-column prop="caseCount" label="用例总数" width="80"/>
 
