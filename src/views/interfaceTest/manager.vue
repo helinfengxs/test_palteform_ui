@@ -1,21 +1,29 @@
 <template>
   <div class="app-container">
     <el-row :gutter="20">
-      <el-col :span="2.5"><el-button  @click="openDialog" type="primary" size="small">新增接口</el-button></el-col>
-      <el-col :span="2"><el-button type="danger" size="small" @click="removeSelect">批量删除</el-button></el-col>
-      <el-col :span="1"><el-button type="danger" size="small" @click="removeSelect">批量导入</el-button></el-col>
+      <el-col :span="1.5"><el-button  @click="openDialog" type="primary" size="small">新增接口</el-button></el-col>
+      <el-col :span="1.5"><el-button type="danger" size="small" @click="removeSelect">批量删除</el-button></el-col>
+      <el-col :span="1.5"><el-button type="success" size="small" @click="removeSelect">批量导入</el-button></el-col>
     </el-row>
     <!--  条件查询-->
-    <el-form :inline="true" :model="formInline" class="demo-form-inline">
+    <el-form :inline="true" :model="formInline" class="demo-form-inline" style="margin-top: 20px">
       <el-form-item label="接口名称">
-        <el-input maxlength="20" v-model="formInline.title" placeholder="项目名称" size="mini" style="width: 120px"></el-input>
+        <el-input maxlength="20" v-model="formInline.name" placeholder="接口名称" size="mini" style="width: 120px"></el-input>
       </el-form-item>
       <el-form-item label="所属项目" >
-        <el-select v-model="formInline.testType" placeholder="请选择" size="mini"  style="width: 120px" >
-          <el-option label="UI测试" value=0></el-option>
-          <el-option label="接口测试" value=1></el-option>
-          <el-option label="性能测试" value=2></el-option>
-          <el-option label="app测试" value=3></el-option>
+        <el-select
+          v-model="formInline.projectId"
+          placeholder="请选择"
+          size="mini"
+          style="width: 120px"
+          :clearable="true"
+          >
+          <el-option
+            v-for="p in projectList"
+            :key="p.id"
+            :label="p.title"
+            :value="p.id"
+          ></el-option>
         </el-select>
       </el-form-item>
 
@@ -69,10 +77,10 @@
 
       <el-form   :model="interfaceData" :rules="rules" ref="projects"  label-width="80px">
         <el-form-item label="项目名称" :required="true" prop="title">
-          <el-input style="width: 250px"  v-model="interfaceData.name" placeholder="项目名称" auto-complete="off" size="small" :show-word-limit="true" maxlength="20"></el-input>
+          <el-input style="width: 250px"  v-model="interfaceData.name" placeholder="接口名称" auto-complete="off" size="small" :show-word-limit="true" maxlength="20"></el-input>
         </el-form-item>
         <el-form-item label="项目名称" :required="true" prop="title">
-          <el-input style="width: 250px"  v-model="interfaceData.addr" placeholder="项目名称" auto-complete="off" size="small" :show-word-limit="true" maxlength="20"></el-input>
+          <el-input style="width: 250px"  v-model="interfaceData.addr" placeholder="接口地址" auto-complete="off" size="small" :show-word-limit="true" maxlength="20"></el-input>
         </el-form-item>
 
       </el-form>
@@ -104,7 +112,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="interfaceName" label="接口名称" width="180" />
+        <el-table-column prop="interfaceName" label="接口名称" width="300" />
 
 <!--        <el-table-column label="项目测试类型" width="80">-->
 <!--          <template slot-scope="scop" >-->
@@ -115,12 +123,12 @@
 
 <!--          </template>-->
 <!--        </el-table-column>-->
-        <el-table-column  prop="interfaceAddress" label="接口地址" width="80"/>
-        <el-table-column  prop="interfaceCases" label="关联用例数" width="80"/>
-        <el-table-column  prop="projectName" label="所属项目" width="80"/>
-        <el-table-column prop="gmtCreate" label="创建时间" width="160"/>
-        <el-table-column prop="gmtModified" label="更新时间" width="160" />
-        <el-table-column label="操作" width="200" align="center">
+        <el-table-column  prop="interfaceAddress" label="接口地址" width="300"/>
+        <el-table-column  prop="interfaceCases" label="关联用例数" width="180"/>
+        <el-table-column  prop="projectName" label="所属项目" width="180"/>
+        <el-table-column prop="gmtCreate" label="创建时间" width="200"/>
+        <el-table-column prop="gmtModified" label="更新时间" width="200" />
+        <el-table-column label="操作" align="center">
           <template slot-scope="scope">
             <el-button type="primary" size="mini" icon="el-icon-edit" @click="eidtor(scope.row.id)">修改</el-button>
 
@@ -155,11 +163,15 @@ export default {
       interfaceData:{
 
       },
-      formInline:{}
+      formInline:{
+
+      },
+      projectList:[]
     }
   },
   created() {
     this.getList()
+    this.getProject()
   },
   methods: {
 
@@ -188,6 +200,18 @@ export default {
     //批量删除
     removeSelect(){
 
+    },
+    //获取所有项目方法
+    getProject(){
+      i.getProject()
+      .then(response =>{
+
+        this.projectList = response.data.items
+      })
+    },
+   //条件查询
+    onSubmit(){
+      console.log(this.formInline)
     }
 
   }

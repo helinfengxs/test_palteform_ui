@@ -6,5 +6,12 @@ export default {
       method: 'post',
       data: interfaceQuery
     })
+  },
+  getProject() {
+    return request({
+      url:"/projectservice/project/findAll",
+      method:"get"
+    })
   }
+
 }
