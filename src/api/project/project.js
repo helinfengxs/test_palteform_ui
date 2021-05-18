@@ -3,47 +3,47 @@ import request from '@/utils/request'
 export default {
   getProjectPage(current,limit,projectQuery) {
     return request({
-      url: `/projectservice/pageProject/${current}/${limit}`,
+      url: `/projectservice/project/pageProject/${current}/${limit}`,
       method: 'post',
       data: projectQuery
     })
   },
   addProject(project){
     return request({
-      url: `/projectservice/addProject/`,
+      url: `/projectservice/project/addProject/`,
       method: 'post',
       data: project
     })
   },
   removeProjectId(id){
     return request({
-      url: `/projectservice/${id}`,
+      url: `/projectservice/project/${id}`,
       method: 'delete',
     })
   },
   findProjectByTitle(title){
     return request({
-      url: `/projectservice/findProjectByTitle`,
+      url: `/projectservice/project/findProjectByTitle`,
       method: 'get',
       params: {"title":title}
     })
   },
   deletePartProject(ids){
     return request({
-      url: `/projectservice/deletePartProject`,
+      url: `/projectservice/project/deletePartProject`,
       method: 'delete',
       data:ids
     })
   },
   findProjectById(id){
     return request({
-      url: `/projectservice/getProject/${id}/`,
+      url: `/projectservice/project/getProject/${id}/`,
       method: 'get',
     })
   },
   updatePorjectById(project){
     return request({
-      url: `/projectservice/updateProject/`,
+      url: `/projectservice/project/updateProject/`,
       method: 'post',
       data:project
     })

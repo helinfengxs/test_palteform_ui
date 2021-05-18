@@ -108,11 +108,10 @@
       :data="items"
       element-loading-text="数据加载中"
 
-      fit
       highlight-current-row
       @selection-change="handleSelectionChange"
       :cell-style="{background:'#fff'}"
-      :border="true"
+      border
     >
       <el-table-column
         type="selection"
@@ -272,7 +271,7 @@ export default {
      */
     resetData(){
 
-
+      this.formInline = {}
       this.getList(this.page,this.limit,this.formInline)
 
       this.formInline ={}
