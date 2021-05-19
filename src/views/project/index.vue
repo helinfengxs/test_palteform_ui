@@ -69,7 +69,7 @@
 
         <el-date-picker
           v-model="formInline.begin"
-          type="datetime"
+          type="date"
           placeholder="选择日期时间"
           size="mini"
           style="width: 180px"
@@ -84,7 +84,7 @@
 
         <el-date-picker
           v-model="formInline.end"
-          type="datetime"
+          type="date"
           placeholder="选择日期时间"
           size="mini"
           style="width: 180px"

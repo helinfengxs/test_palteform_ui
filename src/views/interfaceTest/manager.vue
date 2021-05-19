@@ -8,7 +8,7 @@
     <!--  条件查询-->
     <el-form :inline="true" :model="formInline" class="demo-form-inline" style="margin-top: 20px">
       <el-form-item label="接口名称">
-        <el-input maxlength="20" v-model="formInline.name" placeholder="接口名称" size="mini" style="width: 120px"></el-input>
+        <el-input maxlength="20" v-model="formInline.interfaceName" placeholder="接口名称" size="mini" style="width: 120px"></el-input>
       </el-form-item>
       <el-form-item label="所属项目" >
         <el-select
@@ -31,7 +31,7 @@
 
         <el-date-picker
           v-model="formInline.begin"
-          type="datetime"
+          type="date"
           placeholder="选择日期时间"
           size="mini"
           style="width: 180px"
@@ -46,7 +46,7 @@
 
         <el-date-picker
           v-model="formInline.end"
-          type="datetime"
+          type="date"
           placeholder="选择日期时间"
           size="mini"
           style="width: 180px"
@@ -105,14 +105,14 @@
         </el-table-column>
         <el-table-column
           label="序号"
-          width="70"
+          width="50"
           align="center">
           <template slot-scope="scope">
             {{ (page-1)* limit+scope.$index+1 }}
           </template>
         </el-table-column>
 
-        <el-table-column prop="interfaceName" label="接口名称" width="300" />
+        <el-table-column prop="interfaceName" label="接口名称" width="150" />
 
 <!--        <el-table-column label="项目测试类型" width="80">-->
 <!--          <template slot-scope="scop" >-->
@@ -123,11 +123,11 @@
 
 <!--          </template>-->
 <!--        </el-table-column>-->
-        <el-table-column  prop="interfaceAddress" label="接口地址" width="300"/>
-        <el-table-column  prop="interfaceCases" label="关联用例数" width="180"/>
-        <el-table-column  prop="projectName" label="所属项目" width="180"/>
-        <el-table-column prop="gmtCreate" label="创建时间" width="200"/>
-        <el-table-column prop="gmtModified" label="更新时间" width="200" />
+        <el-table-column  prop="interfaceAddress" label="接口地址" width="150"/>
+        <el-table-column  prop="interfaceCases" label="关联用例数" width="80"/>
+        <el-table-column  prop="projectName" label="所属项目" width="150"/>
+        <el-table-column prop="gmtCreate" label="创建时间" width="150"/>
+        <el-table-column prop="gmtModified" label="更新时间" width="150" />
         <el-table-column label="操作" align="center">
           <template slot-scope="scope">
             <el-button type="primary" size="mini" icon="el-icon-edit" @click="eidtor(scope.row.id)">修改</el-button>
@@ -164,7 +164,10 @@ export default {
 
       },
       formInline:{
-
+        begin:null,
+        end:null,
+        interfaceName:null,
+        projectId:null
       },
       projectList:[]
     }
@@ -179,7 +182,7 @@ export default {
       this.multipleSelection = val;
     },
     getList() {
-      i.getPageInterface(this.page,this.limit,this.interfaceQuery)
+      i.getPageInterface(this.page,this.limit,this.formInline)
       .then(response =>{
         this.page = response.data.current
         this.items = response.data.items
@@ -211,7 +214,14 @@ export default {
     },
    //条件查询
     onSubmit(){
+      this.getList()
       console.log(this.formInline)
+    },
+    //清空条件
+    resetData(){
+      this.formInline = {}
+      this.getList()
+      this.formInline = {}
     }
 
   }
