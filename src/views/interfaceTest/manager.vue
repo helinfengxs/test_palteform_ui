@@ -31,12 +31,13 @@
 
         <el-date-picker
           v-model="formInline.begin"
-          type="date"
+          type="datetime"
           placeholder="选择日期时间"
           size="mini"
           style="width: 180px"
           clearable
           :editable="false"
+          value-format="yyyy-MM-dd HH:mm:ss">
         >
 
         </el-date-picker>
@@ -46,12 +47,13 @@
 
         <el-date-picker
           v-model="formInline.end"
-          type="date"
+          type="datetime"
           placeholder="选择日期时间"
           size="mini"
           style="width: 180px"
           clearable
           :editable="false"
+          value-format="yyyy-MM-dd HH:mm:ss"
         >
 
         </el-date-picker>
@@ -75,18 +77,28 @@
       </div>
 
 
-      <el-form   :model="interfaceData" :rules="rules" ref="projects"  label-width="80px">
-        <el-form-item label="项目名称" :required="true" prop="title">
+      <el-form   :model="interfaceData" :rules="rules" ref="name"  label-width="80px">
+        <el-form-item label="接口名称" prop="title">
           <el-input style="width: 250px"  v-model="interfaceData.name" placeholder="接口名称" auto-complete="off" size="small" :show-word-limit="true" maxlength="20"></el-input>
         </el-form-item>
-        <el-form-item label="项目名称" :required="true" prop="title">
+        <el-form-item label="接口地址"  prop="addr">
           <el-input style="width: 250px"  v-model="interfaceData.addr" placeholder="接口地址" auto-complete="off" size="small" :show-word-limit="true" maxlength="20"></el-input>
         </el-form-item>
 
+        <el-form-item label="所属项目"    prop="projectId">
+          <el-select style="width: 250px" v-model="interfaceData.projectId" placeholder="请选择项目" size="small"  :clearable="true" :disabled="isDisabled">
+            <el-option
+              v-for="p in projectList"
+              :key="p.id"
+              :label="p.title"
+              :value="p.id"
+            ></el-option>
+          </el-select>
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取 消</el-button>
-<!--        <el-button type="primary" @click="commitProjectInfo(projectId)" >确 定</el-button>-->
+        <el-button type="primary" @click="commitProjectInfo(interfaceId)" >确 定</el-button>
       </div>
     </el-dialog>
 <!--    列表展示-->
@@ -169,7 +181,10 @@ export default {
         interfaceName:null,
         projectId:null
       },
-      projectList:[]
+      projectList:[],
+      dialogFormVisible:false,
+      projectName:"新增接口",
+      interfaceId:""
     }
   },
   created() {
@@ -198,7 +213,8 @@ export default {
   },
     //新增按钮
     openDialog(){
-
+      this.projectName = "新增接口"
+      this.dialogFormVisible = true
     },
     //批量删除
     removeSelect(){

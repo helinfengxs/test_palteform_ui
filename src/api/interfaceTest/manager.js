@@ -12,6 +12,13 @@ export default {
       url:"/projectservice/project/findAll",
       method:"get"
     })
+  },
+  addInterface(interfaceInfo){
+    return request({
+      url: `/projectservice/interface/addInterface`,
+      method: 'post',
+      data: interfaceInfo
+    })
   }
 
 }

@@ -69,12 +69,13 @@
 
         <el-date-picker
           v-model="formInline.begin"
-          type="date"
+          type="datetime"
           placeholder="选择日期时间"
           size="mini"
           style="width: 180px"
           clearable
           :editable="false"
+          value-format="yyyy-MM-dd HH:mm:ss"
         >
 
         </el-date-picker>
@@ -84,12 +85,13 @@
 
         <el-date-picker
           v-model="formInline.end"
-          type="date"
+          type="datetime"
           placeholder="选择日期时间"
           size="mini"
           style="width: 180px"
           clearable
           :editable="false"
+          value-format="yyyy-MM-dd HH:mm:ss"
         >
 
         </el-date-picker>
