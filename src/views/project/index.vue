@@ -310,7 +310,7 @@ export default {
         }else {
           this.dialogFormVisible=false
           this.$message({
-            type: 'fialed',
+            type: 'error',
             message: '添加项目失败'
           });
         }

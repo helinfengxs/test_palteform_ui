@@ -3,7 +3,7 @@
     <el-row :gutter="20">
       <el-col :span="1.5"><el-button  @click="openDialog" type="primary" size="small">新增接口</el-button></el-col>
       <el-col :span="1.5"><el-button type="danger" size="small" @click="removeSelect">批量删除</el-button></el-col>
-      <el-col :span="1.5"><el-button type="success" size="small" @click="removeSelect">批量导入</el-button></el-col>
+      <el-col :span="1.5"><el-button type="success" size="small" @click="importExcel">批量导入</el-button></el-col>
     </el-row>
     <!--  条件查询-->
     <el-form :inline="true" :model="formInline" class="demo-form-inline" style="margin-top: 20px">
@@ -67,22 +67,22 @@
         <el-button type="info" @click="resetData"  size="mini" >清空条件</el-button>
       </el-form-item>
     </el-form>
-    <!--新增项目-->
+    <!--新增或修改接口信息-->
     <el-dialog title=""  :visible.sync="dialogFormVisible" :close-on-click-modal="false" @close="celarData" width="600px"  >
 
 
 
       <div slot="title" class="header-title">
-        <span v-show="projectName" class="title-name">{{projectName}}</span>
+        <span v-show="daligName" class="title-name">{{daligName}}</span>
       </div>
 
 
-      <el-form   :model="interfaceData" :rules="rules" ref="name"  label-width="80px">
-        <el-form-item label="接口名称" prop="title">
-          <el-input style="width: 250px"  v-model="interfaceData.name" placeholder="接口名称" auto-complete="off" size="small" :show-word-limit="true" maxlength="20"></el-input>
+      <el-form   :model="interfaceData" :rules="rules" ref="interfaceData"  label-width="80px">
+        <el-form-item label="接口名称" prop="interfaceName">
+          <el-input style="width: 250px"  v-model="interfaceData.interfaceName" placeholder="接口名称" auto-complete="off" size="small" :show-word-limit="true" maxlength="20"></el-input>
         </el-form-item>
-        <el-form-item label="接口地址"  prop="addr">
-          <el-input style="width: 250px"  v-model="interfaceData.addr" placeholder="接口地址" auto-complete="off" size="small" :show-word-limit="true" maxlength="20"></el-input>
+        <el-form-item label="接口地址"  prop="interfaceAddress">
+          <el-input style="width: 250px"  v-model="interfaceData.interfaceAddress" placeholder="接口地址" auto-complete="off" size="small" :show-word-limit="true" maxlength="20"></el-input>
         </el-form-item>
 
         <el-form-item label="所属项目"    prop="projectId">
@@ -98,7 +98,7 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取 消</el-button>
-        <el-button type="primary" @click="commitProjectInfo(interfaceId)" >确 定</el-button>
+        <el-button type="primary" @click="commitInfo(interfaceId)" >确 定</el-button>
       </div>
     </el-dialog>
 <!--    列表展示-->
@@ -164,6 +164,30 @@
 import i from '@/api/interfaceTest/manager'
 export default {
   data() {
+    var checkInterfaceName = (rule, value, callback) =>{
+
+      if(!value){
+        callback(new Error('接口名称未填入'));
+      }
+      else {
+        callback();
+      }
+    }
+    var checkInterfaceAddr = (rule, value, callback)=>{
+      if(!value){
+        callback(new Error("接口地址未填入"))
+      }
+      else {
+        callback()
+      }
+    }
+    var checkProjectId = (rule, value, callback)=>{
+      if(!value){
+        callback(new Error("所属项目未选择"))
+      }else {
+        callback()
+      }
+    }
     return {
       total:0,
       items: [],
@@ -183,8 +207,21 @@ export default {
       },
       projectList:[],
       dialogFormVisible:false,
-      projectName:"新增接口",
-      interfaceId:""
+      daligName:"新增接口",
+      interfaceId:"",
+      rules:{
+        interfaceName: [
+          { validator:checkInterfaceName ,trigger: 'blur' },
+        ],
+        interfaceAddress:[
+          {validator:checkInterfaceAddr ,trigger: 'blur'},
+          {pattern:/^\/(\w+\/?)+$/,message: '格式错误；例如：/test', trigger: 'blur'}
+        ],
+        projectId:[
+          {validator:checkProjectId,trigger:'change'}
+        ]
+      },
+      isDisabled:false
     }
   },
   created() {
@@ -220,6 +257,10 @@ export default {
     removeSelect(){
 
     },
+    //导入Excel
+    importExcel(){
+
+    },
     //获取所有项目方法
     getProject(){
       i.getProject()
@@ -231,13 +272,80 @@ export default {
    //条件查询
     onSubmit(){
       this.getList()
-      console.log(this.formInline)
     },
     //清空条件
     resetData(){
       this.formInline = {}
       this.getList()
       this.formInline = {}
+    },
+    commitInfo(id){
+      if(id===""){
+        this.$refs.interfaceData.validate((valid) =>{
+          if(valid){
+            this.$confirm('是否确认修改？', '确认修改', {
+              distinguishCancelAndClose: true,
+              confirmButtonText: '确认',
+              cancelButtonText: '取消'
+            })
+              .then(()=>{
+                this.addInterfaceInfo()
+              })
+              .catch(()=>{
+                this.$message({
+                  type: 'info',
+                  message: "取消修改"
+                })
+              })
+          }else {
+            this.$message.error('接口信息填写不完整');
+          }
+
+        })
+      }else {
+        console.log("222222222222222")
+      }
+    },
+    //发生添加接口请求
+    addInterfaceInfo(){
+      i.addInterface(this.interfaceData)
+      .then(response =>{
+        if(response.success){
+          this.dialogFormVisible=false
+          this.formInline = {}
+          this.interfaceData ={}
+          this.$message({
+            type: 'success',
+            message: '添加接口成功'
+          });
+          this.getList()
+        }else {
+          this.$message({
+            type: 'error',
+            message: '添加接口失败'
+          });
+        }
+      })
+    },
+    celarData(){
+      this.$refs.interfaceData.resetFields();
+      this.getList()
+      this.isDisabled = false
+      this.interfaceId =""
+      this.formInline = {}
+      this.interfaceId = ""
+    },
+    //修改按钮方法
+    eidtor(id){
+      this.daligName = "修改接口"
+      this.isDisabled = true
+      this.dialogFormVisible = true
+      this.interfaceId = id
+      console.log(id)
+    },
+    //删除按钮方法
+    removeDataById(id){
+      console.log(id)
     }
 
   }
